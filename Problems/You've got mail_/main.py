@@ -1,0 +1,1 @@
+print(email[:email.find('@')])
