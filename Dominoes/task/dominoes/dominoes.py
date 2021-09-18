@@ -86,12 +86,16 @@ class Dominoes:
         """
         Return a representation of the current status of the game.
         """
-        stock = "Stock pieces: " + self.stock_pieces.__str__()
-        computer = "Computer pieces: " + self.computer_pieces.__str__()
-        player = "Player pieces: " + self.player_pieces.__str__()
-        snake = "Domino snake: " + self.domino_snake.__str__()
-        status = "Status: " + self.status
-        return "\n".join([stock, computer, player, snake, status])
+        header = 70 * '='
+        stock = "Stock size: " + str(len(self.stock_pieces))
+        computer = "Computer pieces: " + str(len(self.computer_pieces))
+        snake = self.domino_snake[0].__str__()
+        player = "Your pieces:\n"
+        for i in range(len(self.player_pieces)):
+            player += f"{i + 1}:{self.player_pieces[i]}\n"
+        status = "Status: " + ("It's your turn to make a move. Enter your command." if self.status == "player" else \
+                                "Computer is about to make a move. Press Enter to continue... ")
+        return "\n".join([header, stock, computer, "", snake, "", player, status])
 
 
 dominoes = Dominoes()
