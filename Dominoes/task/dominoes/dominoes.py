@@ -26,7 +26,7 @@ class Dominoes:
             contains the current status of the game.
             It is stored as nested lists, one per piece.
         status : str
-            stores the next turn 'player' or 'computer'.
+            stores the next turn 'player'/'computer' or the end-game condition 'player_wins'/'computer_wins'/'draw'.
     """
     initial_pieces = [[0, 0], [0, 1], [0, 2], [0, 3], [0, 4], [0, 5], [0, 6],
                       [1, 1], [1, 2], [1, 3], [1, 4], [1, 5], [1, 6],
@@ -82,6 +82,59 @@ class Dominoes:
                 break
         return possible
 
+    def move(self):
+        """Makes the move from player or computer and switches turn."""
+        # If it's player's turn
+        if self.status == "player":
+            # Wait for valid move
+            while True:
+                try:
+                    player_move = int(input())
+                    if abs(player_move) > len(self.player_pieces):
+                        raise ValueError
+                    break  # valid move
+                except ValueError:
+                    print("Invalid input. Please try again.")
+            # Apply the move
+            if player_move < 0:  # piece to the left of the snake
+                self.domino_snake.insert(0, self.player_pieces.pop(abs(player_move) - 1))
+            elif player_move > 0:  # piece to the right of the snake
+                self.domino_snake.append(self.player_pieces.pop(player_move - 1))
+            else:  # player_move == 0, pick from stock
+                if len(self.stock_pieces) > 0:
+                    self.player_pieces.append(self.stock_pieces.pop())
+            self.status = "computer"  # switch turn
+        # If it's computer's turn
+        else:  # self.status == "computer"
+            # Wait for Enter from player
+            input()
+            # Choose a random move
+            computer_move = random.randint(-len(self.computer_pieces), len(self.computer_pieces))
+            # Apply the move
+            if computer_move < 0:  # piece to the left of the snake
+                self.domino_snake.insert(0, self.computer_pieces.pop(abs(computer_move) - 1))
+            elif computer_move > 0:  # piece to the right of the snake
+                self.domino_snake.append(self.computer_pieces.pop(computer_move - 1))
+            else:  # computer_move == 0, pick from stock
+                if len(self.stock_pieces) > 0:
+                    self.computer_pieces.append(self.stock_pieces.pop())
+            self.status = "player"  # switch turn
+
+    def game_over(self):
+        """Checks for end-game conditions and updates status accordingly."""
+        if len(self.player_pieces) == 0:
+            self.status = "player_wins"
+        elif len(self.computer_pieces) == 0:
+            self.status = "computer_wins"
+        else:
+            left_end = self.domino_snake[0][0]
+            right_end = self.domino_snake[len(self.domino_snake) - 1][1]
+            # If numbers on the ends are identical
+            if left_end == right_end:
+                # And appear within the snake 8 times, it's a draw
+                if len([piece for piece in self.domino_snake if left_end in piece]) >= 8:
+                    self.status = "draw"
+
     def __str__(self):
         """
         Return a representation of the current status of the game.
@@ -89,20 +142,45 @@ class Dominoes:
         header = 70 * '='
         stock = "Stock size: " + str(len(self.stock_pieces))
         computer = "Computer pieces: " + str(len(self.computer_pieces))
-        snake = self.domino_snake[0].__str__()
+        snake = ""
+        if len(self.domino_snake) > 6:
+            # If snake is long, show it compacted
+            snake = self.domino_snake[0].__str__() + self.domino_snake[1].__str__() + \
+                    self.domino_snake[2].__str__() + "..." + self.domino_snake[-3].__str__() + \
+                    self.domino_snake[-2].__str__() + self.domino_snake[-1].__str__()
+        else:
+            # Show it entirely
+            for piece in self.domino_snake:
+                snake += piece.__str__()
         player = "Your pieces:\n"
         for i in range(len(self.player_pieces)):
             player += f"{i + 1}:{self.player_pieces[i]}\n"
-        status = "Status: " + ("It's your turn to make a move. Enter your command." if self.status == "player" else \
-                                "Computer is about to make a move. Press Enter to continue... ")
+        status = "Status: "
+        if self.status == "player":
+            status += "It's your turn to make a move. Enter your command."
+        elif self.status == "computer":
+            status += "Computer is about to make a move. Press Enter to continue..."
+        elif self.status == "player_wins":
+            status += "The game is over. You won!"
+        elif self.status == "computer_wins":
+            status += "The game is over. The computer won!"
+        elif self.status == "draw":
+            status += "The game is over. It's a draw!"
         return "\n".join([header, stock, computer, "", snake, "", player, status])
 
 
 dominoes = Dominoes()
 
+# Crate a new game and start it
 while True:
     dominoes.new_game()
     if dominoes.start_game():
         break
 
-print(dominoes)
+# Game loop
+while True:
+    print(dominoes)
+    if dominoes.status not in ("player", "computer"):
+        break  # game over
+    dominoes.move()
+    dominoes.game_over()
