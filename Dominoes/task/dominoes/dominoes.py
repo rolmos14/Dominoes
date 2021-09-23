@@ -9,7 +9,7 @@ class Dominoes:
 
     Attributes:
         initial_pieces : list
-            contains all the 28 unique dominoe pieces
+            contains all the 28 unique domino pieces
         stock_pieces : list
             contains the current stock pieces of the game.
             Initially there are 28 pieces which are used for the game. At the beginning of the game, 7 pieces go to
@@ -92,33 +92,79 @@ class Dominoes:
                     player_move = int(input())
                     if abs(player_move) > len(self.player_pieces):
                         raise ValueError
-                    break  # valid move
+                    if self.move_is_legal(self.player_pieces[abs(player_move) - 1], player_move):
+                        break  # valid and legal move
+                    print("Illegal move. Please try again.")
                 except ValueError:
                     print("Invalid input. Please try again.")
             # Apply the move
-            if player_move < 0:  # piece to the left of the snake
-                self.domino_snake.insert(0, self.player_pieces.pop(abs(player_move) - 1))
-            elif player_move > 0:  # piece to the right of the snake
-                self.domino_snake.append(self.player_pieces.pop(player_move - 1))
-            else:  # player_move == 0, pick from stock
-                if len(self.stock_pieces) > 0:
-                    self.player_pieces.append(self.stock_pieces.pop())
+            self.apply_move(self.player_pieces, player_move)
             self.status = "computer"  # switch turn
         # If it's computer's turn
         else:  # self.status == "computer"
             # Wait for Enter from player
             input()
-            # Choose a random move
-            computer_move = random.randint(-len(self.computer_pieces), len(self.computer_pieces))
+            # Wait for valid move
+            while True:
+                # Choose a random move
+                computer_move = random.randint(-len(self.computer_pieces), len(self.computer_pieces))
+                if self.move_is_legal(self.computer_pieces[abs(computer_move) - 1], computer_move):
+                    break
             # Apply the move
-            if computer_move < 0:  # piece to the left of the snake
-                self.domino_snake.insert(0, self.computer_pieces.pop(abs(computer_move) - 1))
-            elif computer_move > 0:  # piece to the right of the snake
-                self.domino_snake.append(self.computer_pieces.pop(computer_move - 1))
-            else:  # computer_move == 0, pick from stock
-                if len(self.stock_pieces) > 0:
-                    self.computer_pieces.append(self.stock_pieces.pop())
+            self.apply_move(self.computer_pieces, computer_move)
             self.status = "player"  # switch turn
+
+    def move_is_legal(self, piece, move):
+        """
+        Verifies if a move is legal.
+        A move is legal if at least one of the numbers of the piece matches
+        the number at the corresponding end of the domino snake.
+        A pick from the stock is always legal.
+
+        Parameters:
+            piece : list
+                list containing the two numbers of the piece
+            move : int
+                move to perform
+
+        Return:
+            legal : bool
+                True if move is legal, otherwise False
+
+        """
+        # Verify at left end of domino snake
+        if move < 0 and self.domino_snake[0][0] in piece:
+            return True
+        # Verify at right end of domino snake
+        if move > 0 and self.domino_snake[-1][1] in piece:
+            return True
+        if move == 0:
+            return True
+        return False
+
+    def apply_move(self, pieces, move):
+        """
+        Applies the move for the specified player pieces.
+
+        Parameters:
+            pieces : list
+                list of pieces of the player that is making the move
+            move : int
+                move to perform
+        """
+        if move < 0:  # piece to the left of the snake
+            self.domino_snake.insert(0, pieces.pop(abs(move) - 1))
+            # Check orientation of piece to match numbers
+            if self.domino_snake[0][1] != self.domino_snake[1][0]:
+                self.domino_snake[0] = self.domino_snake[0][::-1]
+        elif move > 0:  # piece to the right of the snake
+            self.domino_snake.append(pieces.pop(move - 1))
+            # Check orientation of piece to match numbers
+            if self.domino_snake[-1][0] != self.domino_snake[-2][1]:
+                self.domino_snake[-1] = self.domino_snake[-1][::-1]
+        else:  # move == 0, pick from stock
+            if len(self.stock_pieces) > 0:
+                pieces.append(self.stock_pieces.pop())
 
     def game_over(self):
         """Checks for end-game conditions and updates status accordingly."""
