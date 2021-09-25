@@ -104,15 +104,45 @@ class Dominoes:
         else:  # self.status == "computer"
             # Wait for Enter from player
             input()
-            # Wait for valid move
-            while True:
-                # Choose a random move
-                computer_move = random.randint(-len(self.computer_pieces), len(self.computer_pieces))
-                if self.move_is_legal(self.computer_pieces[abs(computer_move) - 1], computer_move):
-                    break
+            # Choose piece based on AI
+            computer_move = self.ai_move()
             # Apply the move
             self.apply_move(self.computer_pieces, computer_move)
             self.status = "player"  # switch turn
+
+    def ai_move(self):
+        """
+        Determines the move to be performed by computer, taking into account computer pieces and snake pieces.
+
+        Return:
+            move : int
+                move to be performed by computer
+        """
+        # Count number of 0's, 1's... and 6's in computer hand and in the snake
+        number_count = []  # list where number is the index and the value is the count of that number
+        for num in range(7):
+            count = 0
+            # Count appearances in computer pieces
+            count = len([number for piece in self.computer_pieces for number in piece if num == number])
+            # Count appearances in domino snake
+            count += len([number for piece in self.domino_snake for number in piece if num == number])
+            number_count.append(count)
+        # Each piece in computer hand receives a score equal to the sum of appearances of its numbers
+        piece_score = []  # list where index is the position of the piece and value the score
+        for piece in self.computer_pieces:
+            piece_score.append(number_count[piece[0]] + number_count[piece[1]])
+        # Try to play the piece with the highest score
+        for _ in range(len(piece_score)):
+            piece_index = piece_score.index(max(piece_score))
+            piece_score[piece_index] = -1  # -1 for pieces already checked
+            # Check if piece can be placed at left end of domino snake
+            if self.move_is_legal(self.computer_pieces[piece_index], -1):
+                return - (piece_index + 1)
+            # Check if piece can be placed at right end of domino snake
+            if self.move_is_legal(self.computer_pieces[piece_index], 1):
+                return piece_index + 1
+        # If no piece can be played, pick from stock
+        return 0
 
     def move_is_legal(self, piece, move):
         """

@@ -368,5 +368,8 @@ files:
         TestStage5('dominoes.dominoes').run_tests()
   learner_created: false
 feedback_link: https://hyperskill.org/projects/146/stages/790/implement#comment
-status: Unchecked
+status: Solved
+feedback:
+  message: Congratulations!
+  time: Sat, 25 Sep 2021 20:14:53 UTC
 record: -1
